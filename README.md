@@ -1,7 +1,5 @@
 # Redgalaxy
 
 
-Red galaxy es un motor para poder crear tu propia red social. 
-
-Requisitos : Servidor Apache y un motor Mysql
+Red social libre similar a tumblr, se permite subir imagenes, videos, estados y links. Envia mensajes entre usuarios y te permite hacer amigos. 
 
