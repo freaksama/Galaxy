@@ -1,0 +1,730 @@
+<script src="<?=$url_g;?>js/jquery.nanoscroller.min.js" ></script>
+<link href="<?=$url_g;?>css/nanoscroller.css" rel="stylesheet"> 
+<script type="text/javascript">
+
+    var id_usuario_actual   = <?=$_SESSION['s']['id_usuario'];?>;
+    var num_notificaciones  = 0 ;
+    var num_mensajes        = 0 ;   
+    var num_contenido       = 0 ; 
+    var id_grupo_act        = 0 ;
+    var id_conversacion_act = 0 ;          
+    var id_mensaje_temp     = 0 ;
+    var id_last_m           = 0 ;
+    var id_last_n           = <?=$_SESSION['s']['id_last_n']?> + 0 ;
+    var id_last_c           = <?=$_SESSION['s']['id_last_c']?> + 0 ;
+    var page_con            = 0 ;
+
+    var id_mensaje_g        = 0 ; 
+
+    var chat_activo         = 0 ;
+    var num_chat            = 0 ; 
+    
+      
+   function salir()
+   {
+        if(confirm('Realmente desea salir del sistema?'))
+        {
+            window.location.href="index.php?op=salir";
+        }
+   }
+
+      <?
+        if($_SESSION['s']['id_usuario']!= '')
+        {
+            ?>
+                setInterval(function(){      
+                    cargar_datos_general();  
+                },10000);          
+            <?
+        }
+      ?>
+      
+
+       function cargar_datos_general()
+       {
+          dataString = 'opcion=load_con_gen&id_last_n=' + id_last_n + '&id_last_m=' + id_last_m + '&id_last_c=' + id_last_c + '&id_mensaje_g=' + id_mensaje_g;
+
+          $.ajax({
+              url: "ajax/ajax.php",
+              data: dataString,
+              async:true,
+              beforeSend: function(ob){ /*$("#msj").html("<img src='img/load_05.gif' align='top' border='0' />");*/},
+              complete: function (ob,exito){},
+              dataType:"html",        
+              global:true,
+              success:function(data)
+                      {
+                          var r = jQuery.parseJSON(data);
+
+                          //alert(r);
+                          
+                          var mensajes      = r['mensajes'];
+                          var notificaciones= r['notificaciones'];
+                          //var contenido     = r['contenido'];
+                          var mensajes_g    = r['mensajes_g'];
+                          
+                          
+                          if(mensajes.length > 0)
+                          {
+                            // bandera de nuevos mensajes 
+                            num_mensajes += mensajes.length;
+                            $("#lk_n_men").text(num_mensajes);                           
+                          }
+
+
+                          if(notificaciones.length > 0)
+                          {
+                            // bandera de nuevas notificaciones                             
+                            num_notificaciones += notificaciones.length;
+                            $("#lk_noti").text(num_notificaciones);                              
+                            id_last_n = notificaciones[0].id_notificacion;
+
+                            //alert(notificaciones[0].id_notificacion);
+                          }
+
+                          /*if(contenido.count > 0)
+                          {
+                            num_contenido += parseInt(contenido.count);
+                            id_last_c = contenido.id;
+                          }*/
+                          
+                          // manejo de mensajes 
+                          manejar_mensajes(mensajes);
+                          
+                          // manejo de notificaciones 
+                          manejar_notificaciones(notificaciones);
+                          
+                          // manejo de contenido
+                          //manejar_contenido(contenido);
+
+                          manejar_mensajes_g(mensajes_g);
+                            
+
+                        
+                    },
+              timeout:8000,
+              type:"POST"
+          });
+       }
+
+
+        
+
+
+       function crear_noti_ms(r)
+       {
+            var d = '<div id="ms' + r.id_mensaje + '" id="noti-ms" style="display:none">\
+                        <div class="notifi-men col-lg-9 col-lg-offset-1" style="padding-left:0px;">\
+                            <a href="index.php?sub=men&op=con&usuario=' + r.nombre_usuario + '"><img src="' + r.avatar + '" class="avatar-ms" style="width:32px" /></a>\
+                            <a href="index.php?sub=men&op=con&usuario=' + r.nombre_usuario + '"><b>@' + r.nombre_usuario + '</b></a> ' + r.mensaje + '\
+                            <a href="index.php?sub=men&op=con&usuario=' + r.nombre_usuario + '">Responder ahora</a>\
+                        </div>\
+                    </div>';
+
+            $("#noti-ms").append(d);
+            $("#ms"+r.id_mensaje).fadeIn();
+       }
+
+        function mostrar_ms(id)
+        {
+            $("#ms_"+id).fadeIn();
+        } 
+
+        function borrar_noti_ms(r)
+        {
+            //console.log("se elimina el div:"+r.id_mensaje);
+            $("#ms"+r.id_mensaje).fadeOut();
+        }
+
+        function manejar_inbox(inbox)
+        {
+          if(inbox[0].num > 0)
+          {
+            $("#lk_inbox").text(inbox[0].num);         
+          }
+        }
+
+        function manejar_mensajes_anteriores(mensajes)
+        {
+            var id_usuario_envia_temp = 0;
+             // se valida que halla mensajes nuevos
+            if(mensajes.length > 0)
+            {
+                // se valida que esten en el dashboard
+                if ($('#ms_prin').length)
+                {                    
+                    //$("#lk_n_men").text('');   
+
+
+
+                    for(var i=0;i<mensajes.length;i++)
+                    {
+                       
+                        // Seleccion de conversacon activa
+                        if(id_conversacion_act == 0)
+                        {
+                            id_conversacion_act = mensajes[i].id_usuario_envia;    
+                        }
+
+                        //los mensajes se debe manejar en orden inverso                        
+                        
+                        //id_last_m =  mensajes[i].id_mensaje;
+
+                        //crear_mensaje_general(mensajes[i]);
+
+                        if( mensajes[i].id_usuario_envia != id_usuario_actual)
+                        {
+                            id_usuario_envia_temp = mensajes[i].id_usuario_envia;
+                            // si el usuario que envia es el usuario de la session 
+                            // entonces el mensaje debe salir a la derecha
+                            var div_ms = '<div class="m_m"><div class="aw_l"></div>\
+                                            <div  class="ms ms_i ">\
+                                            <span class="m_o"><b>' +  mensajes[i].nombre_usuario + '</b>:</span> ' +  mensajes[i].mensaje+'\
+                                            <span class="hd_time" title="' + mensajes[i].fecha_e + '">' +  mensajes[i].fecha_mini+'</span>\
+                                            </div>\
+                                          </div>';
+                        }
+                        else
+                        {
+                            // En caso contrario el mensaje debe salir a la izquierda
+                            var div_ms = '<div class="m_m"><div class="aw_r"></div>\
+                                            <div  class="ms ms_d ">\
+                                            <span class="m_y">' +  mensajes[i].mensaje+'\
+                                            <span class="hd_time" title="' + mensajes[i].fecha_e + '">' +  mensajes[i].fecha_mini+'</span>\
+                                            </div>\
+                                          </div>';
+                        }
+                        
+                        $("#body_ms_"+id_conversacion_act).append(div_ms);    
+                        //$("#body_ms_"+id_usuario_envia).animate({ scrollTop: $("#body_ms_"+id_usuario_envia).last().attr("scrollHeight") }, 500);
+                        //$("#txt_ms").text(''); 
+                        $(".nano").nanoScroller();
+                        $("#dcu_" + id_conversacion_act).nanoScroller({ scroll: 'bottom' }); 
+                    
+                       
+                    }  
+
+                    marcar_mensaje_visto(id_usuario_envia_temp); 
+
+                }                 
+            }
+        }
+        
+        function manejar_mensajes(mensajes)
+        {
+            // se valida que halla mensajes nuevos
+            if(mensajes.length > 0)
+            {
+                // se valida que esten en el dashboard
+                if ($('#ms_prin').length)
+                {                    
+                    $("#lk_n_men").text('');   
+
+                    for(var i=0;i<mensajes.length;i++)
+                    {
+                        
+
+                        // Seleccion de conversacon activa
+                        if(id_conversacion_act == 0)
+                        {
+                            id_conversacion_act = mensajes[i].id_usuario_envia;  
+                            id_grupo_act        = mensajes[i].id_grupo_act;  
+                        }
+
+                        // primero valida si ya hay una conversacion con ese usuario. 
+                        // si hay una conversacion se escribie ahi , si no crea la ventana de chat
+                        // escribe el mensaje 
+
+                        //alert(mensajes[i].nombre_usuario);
+
+                        if($("#dcu_" + mensajes[i].id_usuario_envia).length)
+                        {                            
+                            var div_con = "#dcu_"+mensajes[i].id_usuario_envia;
+                            //$("#idb_" + mensajes[i].id_grupo).html(img_new_ms);
+                            crear_mensaje_general(mensajes[i]);
+                        }
+                        else
+                        {
+                            var datos = [];
+
+                            datos['id_usuario']     = mensajes[i].id_usuario_envia;
+                            datos['avatar']         = mensajes[i].avatar;
+                            datos['nombre_usuario'] = mensajes[i].nombre_usuario;
+                            datos['id_grupo']       = mensajes[i].id_grupo;
+                            //datos['no_cargar']      = 'S';
+
+                            iniciar_conversacion(datos);
+
+                            
+
+                        }  
+
+                        if(chat_activo != mensajes[i].id_grupo)
+                        {
+                            var n_m = parseInt($("#lk_k_"+mensajes[i].id_grupo).text());     
+                            if(isNaN(n_m))
+                            {
+                                n_m = 0;
+                            }
+                            //alert(n_m);
+                            n_m = n_m +1;
+                            $("#lk_k_"+mensajes[i].id_grupo).text(n_m);
+
+                        }
+                        
+                        //alert( mensajes[i].id_mensaje);
+                        id_last_m =  mensajes[i].id_mensaje;
+
+
+                        
+                    
+                        /////////////////////////////////////////
+                        /*
+
+                        // se dibuja el nuevo mensaje
+                        var div_ms = '<div class="aw_l"></div>\
+                                        <div  class="ms ms_i ">\
+                                            <span class="m_o"><b>' + mensajes[i].nombre_usuario + '</b>:</span> ' + mensajes[i].mensaje+'\
+                                            <span class="hd_time">' + mensajes[i].fecha_mini+'</span>\
+                                        </div>';
+                        $("#body_ms_"+id_conversacion_act).append(div_ms);    
+                        //$("#body_ms_"+id_usuario_envia).animate({ scrollTop: $("#body_ms_"+id_usuario_envia).last().attr("scrollHeight") }, 500);
+                        //$("#txt_ms").text(''); 
+                        $(".nano").nanoScroller();
+                        $("#dcu_" + id_conversacion_act).nanoScroller({ scroll: 'bottom' }); 
+
+                        ///////////////////////////////////////////////////
+
+                        // bandera para marcar si el mensaje es visto
+                        //$("#msv_" + mensajes[i].id_usuario_envia).val("N");
+                        // se escribe el nuevo mensaje en el chat
+                        // $("#body_ms_" + mensajes[i].id_usuario_envia).append(ms_ue);
+                        // se actualiza el id del ultimo mensaje recibido*/
+                    }   
+
+                }
+                else
+                {
+                    for(var i=0;i<mensajes.length;i++)
+                    {               
+                         id_last_m =  mensajes[i].id_mensaje;
+                    }    
+                }  
+
+                
+
+            }
+        }// fin de manejar mensajes
+
+
+        function manejar_notificaciones(notificaciones)
+        {
+            if(notificaciones.length > 0)
+            {   
+                if ($('#noti-ms').length)
+                {
+                    for(var i=0;i<notificaciones.length;i++)
+                    {
+                         //aparece el mensaje                                
+                        var res = notificaciones[i];
+
+                        // muestra la notificacion
+                        setTimeout(crear_noti_nt,(i*200)+200,res);
+
+                        //desaparece el mensaje 
+                        //setTimeout(borrar_noti_nt,(i*5000)+5000,res);
+                    }
+                }    
+            }
+        }
+
+        function crear_noti_nt(n)
+        {
+            /*var div_n = '<div id="nt_' + n.id_notificacion + '" class="well well-sm mb" style="display:none">\
+                            <div style="float:right">' + n.icono + '</div>\
+                            <img src="' + n.avatar + '" class="avatar-mini"  />\
+                            <a href="index.php?u=' + n.nombre_usuario + '">@' + n.nombre_usuario + '</a>\
+                            ' + n.des + '\
+                            ' + n.contenido + '\
+                            <span class="text-info text-mini text-right">' + n.fecha_mini + '</span> <br>\
+                        </div>';
+            */
+            //alert(n.nombre_usuario);
+
+            if(n.nombre_usuario == 'undefined')
+            {
+                n.nombre_usuario = '';
+            }
+            var div_n = '<div id="nt_' + n.id_notificacion + '" class="well-sm mb not-mini ">\
+                          <div style="float:right">' + n.icono + ' </div>\
+                                <a href="u/' + n.nombre_usuario + '" class="f11"><img src="' + n.avatar + '" class="avatar-mini"  /></a>\
+                                <a href="u/' + n.nombre_usuario + '" class="f11">@' + n.nombre_usuario + '</a>\
+                                <span class="f11">' + n.des + '</span>\
+                                <span class="f11">' + n.contenido + '</span>\
+                                <span class="text-info text-mini text-right">' + n.fecha_mini + '</span> <br>\
+                            </div>';
+
+            $('#noti-ms').append(div_n);
+            $('#nt_'+ n.id_notificacion).fadeIn(500);
+            $("#lk_clean_noti").fadeIn();
+        }
+
+
+        function borrar_noti_nt(n)
+        {
+             $("#nt_"+n.id_notificacion).fadeOut(1000);
+        }
+
+
+
+
+        function manejar_contenido(contenido)
+        {
+            if(contenido.count > 0)
+            {
+                $("#lk_cont").text(num_contenido);
+            }
+        }  
+
+        function manejar_mensajes_g(mensajes_g)
+        {
+            //alert(mensajes_g.length);
+            for(i= 0;i <mensajes_g.length;i++)
+            {
+                var usuario = '<a href="u/' + mensajes_g[i].nombre_usuario + '" class="text-danger"><b>' + mensajes_g[i].nombre_usuario + '</b></a>';
+                var m = '<span>' + usuario +' : ' + mensajes_g[i].mensaje + '</span><br>';
+
+                //alert(m);
+
+                $("#mg_prin").append(m);
+                $(".nano").nanoScroller();
+                $(".nano").nanoScroller({ scroll: 'bottom' });
+
+                id_mensaje_g = mensajes_g[i].id_mensaje_global;
+            }
+            
+        }  
+
+
+        
+
+        
+
+        $(function(){
+            <?
+                if($_SESSION['s']['id_usuario']!= '')
+                {
+                    ?>
+                        cargar_datos_general();
+                    <?
+                }
+            ?>
+        });
+       
+    </script>
+
+  <script type="text/javascript">
+
+    $(function() {  
+
+       
+
+        //CERRAR VENTANA DE CHAT
+        $(document).on("click",".clo_chat",function(){
+
+            var idc = $(this).attr('id');
+            var id  = idc.substring(4);
+ 
+            $(".ms_min").css('background-color','#0066FF');
+            // cierra ventana minimizada
+            $("#msm_"+id).hide();
+            // cierra ventanaidc chat 
+            //$("#ms_prin").hide();
+        });
+
+        // Marca el mensaje en visto cuando pasen el mouse sobre el mensaje
+        /*$(document).on('mouseover','.dcu',function(){
+
+            var idc = $(this).attr('id');
+            var id  = idc.substring(4);            
+            
+            if($("#msv_"+id).val() == 'N')
+            {
+                marcar_mensaje_visto(id);
+            }
+
+        });// fin */
+
+        //  Envia el mensaje cuando se da enter
+        
+        $(document).on('keypress','#txt_ms',function(e){
+               
+            if(e.keyCode == 13)
+            {
+                var men = $("#txt_ms").text();
+                men = men.trim();
+                if(men != '')
+                {   
+                    reg_men_mini(men);      
+                }
+                return false;
+            }
+
+        });
+        
+        
+
+	    
+	});// fin de ready
+
+     onload=function()
+     {
+          //setInterval(function(){if(window.parar)return;document.getElementById('ms_sandbox').scrollTop=document.getElementById('ms_sandbox').scrollHeight},30);
+     }
+
+
+     function reg_men_mini(mensaje)
+     {
+          var com          = mensaje;
+          var usuario_des  = id_conversacion_act; 
+          var grupo        = id_grupo_act;
+            
+          crear_mensaje();
+
+          dataString = 'opcion=regmenmini&com=' + com +'&id_user_des=' + usuario_des + '&grupo=' + grupo;
+
+            $.ajax({
+                url: "ajax/ajax.php",
+                data: dataString,
+                async:true,
+                beforeSend: function(ob){ /*$("#msj").html("<img src='img/load_05.gif' align='top' border='0' />");*/},
+                complete: function (ob,exito){},
+                dataType:"html",        
+                global:true,
+                success:function(data)
+                        {
+                            var r = jQuery.parseJSON(data);
+                            
+                            if(r.codigo =='000')
+                            {
+                                //alert('Mensaje enviado');
+                                
+                            }
+                            else
+                            {
+                                //alert('Ocurrio un error al registrar');   
+                            }
+                        },
+                timeout:3000,
+                type:"POST"
+            });
+     } // fin reg_men_mini
+
+     function crear_mensaje_general(mensaje)
+     {
+        if(mensaje.id_usuario_envia != id_usuario_actual)
+        {
+            // si el usuario que envia es el usuario de la session 
+            // entonces el mensaje debe salir a la derecha
+            var div_ms = '<div class="aw_l"></div>\
+                            <div  class="ms ms_i ">\
+                            <span class="m_o"><b>' + mensaje.nombre_usuario + '</b>:</span> ' + mensaje.mensaje+'\
+                            <span class="hd_time" title="' + mensaje.fecha_e + '" >' + mensaje.fecha_mini+'</span>\
+                        </div>';
+        }
+        else
+        {
+            // En caso contrario el mensaje debe salir a la izquierda
+            var div_ms = '<div class="aw_r"></div>\
+                            <div  class="ms ms_d ">\
+                            <span class="m_y"><b>' + mensaje.nombre_usuario + '</b>:</span> ' + mensaje.mensaje+'\
+                            <span class="hd_time" title="' + mensaje.fecha_e + '">' + mensaje.fecha_mini+'</span>\
+                        </div>';
+        }
+       
+        $("#body_ms_"+mensaje.id_usuario_envia).append(div_ms);    
+        //$("#body_ms_"+id_usuario_envia).animate({ scrollTop: $("#body_ms_"+id_usuario_envia).last().attr("scrollHeight") }, 500);
+        //$("#txt_ms").text(''); 
+        $(".nano").nanoScroller();
+        $("#dcu_" + id_conversacion_act).nanoScroller({ scroll: 'bottom' }); 
+     }
+
+     function crear_mensaje()
+     {
+          var con = $("#txt_ms").text();
+
+          var fecha   = new Date();
+          var hora    = fecha.getHours();
+          var minuto  = fecha.getMinutes();
+          var segundo = fecha.getSeconds();
+
+          if (hora < 10) {hora = "0" + hora ;}
+          if (minuto < 10) {minuto = "0" + minuto ; }
+          if (segundo < 10) {segundo = "0" + segundo ;}
+
+          var horita = hora + ":" + minuto  ;
+
+          var div_ms = '<div class="aw_r"></div>\
+                       <div class="ms ms_d">\
+                       <span class="m_y">'+con+'</span>\
+                       <span class="hd_time">'+horita+'</span>\
+                     </div>';
+          //alert(div_ms);
+          $("#body_ms_"+id_conversacion_act).append(div_ms);
+          //$("#body_ms_"+id_conversacion_act).animate({ scrollTop: $("#body_ms_"+id_conversacion_act).last().attr("scrollHeight") }, 500);
+          $("#txt_ms").text(''); 
+          $(".nano").nanoScroller();
+          $("#dcu_" + id_conversacion_act).nanoScroller({ scroll: 'bottom' }); 
+     }// fin crear_mensaje
+
+     function marcar_mensaje_visto(id)
+     {
+          $("#msv_"+id).val('S');
+
+          $("#title").text('My Pack, comparte lo que te gusta ;)');
+
+          var dataString = 'opcion=ms_visto_dash&id=' + id;
+          $.ajax({
+             url: "ajax/ajax.php",
+             data: dataString,
+             async:true,
+             beforeSend: function(ob){ /*$("#msj").html("<img src='img/load_05.gif' align='top' border='0' />");*/},
+             complete: function (ob,exito){},
+             dataType:"html",        
+             global:true,
+             success:function(data)
+                     {
+                       var r = jQuery.parseJSON(data);
+                         
+                       if(r.codigo == '000')
+                       {
+                           $("#msv_"+id).val('S');
+                           $("#idb_"+id).html('');
+                       }
+                       else
+                       {
+                           $("#msv_"+id).val('N');
+                           console.log('Ocurrio un error');
+                       }
+
+                     },
+             timeout:3000,
+             type:"POST"
+          });
+     }// fin de marcar_mensaje_visto
+
+    function iniciar_conversacion(datos)
+    {           
+        // aqui se escoje cual es la conversacion activa        
+        id_grupo_act = datos['id_grupo'];  
+
+
+
+        //alert(id_grupo_act); 
+
+        if(id_conversacion_act == 0)
+        {
+            id_conversacion_act = datos['id_usuario'];              
+        }
+
+        // primero valida si ya hay una conversacion con ese usuario. 
+        // si hay escribie ahi , si no crea la ventana de chat        
+        if($("#dcu_" + datos['id_usuario']).length)
+        {            
+            var div_con = "#dcu_" + datos['id_usuario'];
+            id_conversacion_act = datos['id_usuario'];
+            //page_con = $(div_con).data('page');
+
+        }
+        else
+        {
+        	id_conversacion_act = datos['id_usuario'];    
+
+            // se crea el div de la conversacion            
+            $("#con_head_avatar").attr("src",datos['avatar']);
+            $("#con_head_user").attr("href",'u/'+datos['nombre_usuario']);
+            $("#con_head_user").text('@'+datos['nombre_usuario']);
+
+            var div_conversacion = '<div id="dcu_' + datos['id_usuario'] + '" data-id-user="' + datos['id_usuario'] + '" data-page="1" class="dcu nano"  style="display:none" >\
+                                        <div class="nano-content"><div id="body_ms_' + datos['id_usuario'] +'"></div></div>\
+                                    </div>';
+            
+            $("#ms_prin").append(div_conversacion);            
+
+            var div_con = "#dcu_"+datos['id_usuario'];       
+            page_con = 1 ; 
+        }
+
+
+        
+        $("#ms_prin").show();        
+        $("#ms_sandbox").show();   
+        $("#chat_prin").show();
+
+        if(chat_activo == datos['id_grupo'])
+        {
+            $("#dcu_"+id_conversacion_act).show();
+        }
+        
+
+        if(num_chat == 0 || datos['chat-ini']=='S')
+        {
+            num_chat++;
+            chat_activo =  datos['id_grupo'];  
+
+            //alert("Chat activo :" + chat_activo);
+
+            cambio_conversacion(id_conversacion_act);   
+        }
+        
+        
+        
+
+        if(id_grupo_act != '' )     
+        {
+            cargar_conversacion_anterior(page_con);
+        }
+
+    }
+    
+    function cambio_conversacion(id)
+    {
+
+	    $("#d_contactos").hide();
+	    $("#ms_prin").show();	
+	    $(".dcu").hide();
+	    $("#dcu_"+id).show();	
+	    $(".head_ms").hide();	    
+	    $("#ms_head"+id_conversacion_act).show();	
+	    id_conversacion_act = id;
+        $("#lk_k_"+chat_activo).text('');
+	    //marcar_mensaje_visto(id);
+    }
+
+    function cargar_conversacion_anterior(page)
+    {
+        dataString = 'opcion=load_con_ant&grupo=' + id_grupo_act + '&page=' + page;
+
+          $.ajax({
+              url: "ajax/ajax.php",
+              data: dataString,
+              async:true,
+              beforeSend: function(ob){ /*$("#msj").html("<img src='img/load_05.gif' align='top' border='0' />");*/},
+              complete: function (ob,exito){},
+              dataType:"html",        
+              global:true,
+              success:function(data)
+                    {
+                        var r = jQuery.parseJSON(data);
+                          
+                        if(r.length > 0)
+                        { 
+                           manejar_mensajes_anteriores(r);
+                        }
+                    },
+              timeout:8000,
+              type:"POST"
+          });
+    }
+
+    </script>

@@ -1,0 +1,322 @@
+RewriteEngine on
+
+Options -Indexes
+
+# if a directory or a file exists, use it directly
+
+RewriteCond %{REQUEST_FILENAME} !-f
+
+RewriteCond %{REQUEST_FILENAME} !-d
+
+AddDefaultCharset UTF-8
+
+# otherwise forward it to index.php
+
+#RewriteRule . index.php
+
+# /u/diego
+
+Rewriterule ^u/([a-zA-Z0-9_]+)$ index.php?u=$1 [L,NC]
+Rewriterule ^u/([a-zA-Z0-9_]+)/page/([0-9]+)$ index.php?u=$1&page=$2 [L,NC]
+
+#Mis tableros
+Rewriterule ^u/([a-zA-Z0-9_]+)/tab$ index.php?op=tableros&usuario=$1 [L,NC]
+
+#DETALLES DE TABLERO
+Rewriterule ^u/([a-zA-Z0-9_]+)/tab/([a-zA-Z0-9]+)$ index.php?u=$1&tab=$2 [L,NC]
+Rewriterule ^u/([a-zA-Z0-9_]+)/tab/([a-zA-Z0-9]+)/page/([0-9]+)$ index.php?u=$1&tab=$2&page=$3 [L,NC]
+
+#404
+Rewriterule ^error_404$ index.php?op=404 [L,NC]
+
+
+#FUNDADORES MYPACK 
+Rewriterule ^fundadores/inicio$ index.php?sub=fun&op=info [L,NC]
+Rewriterule ^fundadores/panel$ index.php?sub=fun&op=panel [L,NC]
+Rewriterule ^fundadores/terminos$ index.php?sub=fun&op=term [L,NC]
+Rewriterule ^fundadores/panel/estadisticas$ index.php?sub=fun&op=esta [L,NC]
+Rewriterule ^fundadores/panel/usuarios$ index.php?sub=fun&op=user [L,NC]
+Rewriterule ^fundadores/panel/ganancias$ index.php?sub=fun&op=gana [L,NC]
+Rewriterule ^fundadores/panel/preguntas$ index.php?sub=fun&op=preg [L,NC]
+
+
+
+#CAMBIO DE SEXO 
+Rewriterule ^publica/cambio_sexo$ index.php?sub=img&op=reg5&op2=sexo [L,NC]
+
+#CAMBIO DE SITUACION SENTIMENTAL 
+Rewriterule ^publica/cambio_situacion$ index.php?sub=img&op=reg5&op2=situacion [L,NC]
+
+
+
+
+
+#notificaciones
+Rewriterule ^notificaciones$ index.php?sub=not&op=list [L,NC]
+
+#RSS
+Rewriterule ^rss$ rss.php [L,NC]
+Rewriterule ^tags/rss/([a-zA-Z0-9]+)$ rss.php?tag=$1 [L,NC]
+Rewriterule ^cat/rss/([a-zA-Z0-9]+)$ rss.php?cat=$1 [L,NC]
+Rewriterule ^list/rss$ index.php?op=rss [L,NC]
+
+
+#Contacto
+Rewriterule ^contacto$ index.php?op=contacto [L,NC]
+
+
+
+#dashboard
+
+Rewriterule ^dashboard$ index.php?op=dash [L,NC]
+Rewriterule ^dashboard/page/([0-9]+)$ index.php?op=dash&page=$1 [L,NC]
+
+Rewriterule ^q/([a-zA-Z0-9_]+)$ index.php?op=dash&q=$1 [L,NC]
+Rewriterule ^q/([a-zA-Z0-9_]+)/page/([0-9]+)$ index.php?op=dash&q=$1&page=$2 [L,NC]
+
+Rewriterule ^dashboard/liked$ index.php?op=dash&op=like [L,NC]
+Rewriterule ^dashboard/liked/page/([0-9]+)$ index.php?op=dash&&op=like&page=$1 [L,NC]
+
+Rewriterule ^super_random$ index.php?op=dash&op3=super [L,NC]
+Rewriterule ^super_random/page/([0-9]+)$ index.php?op=dash&op3=super&page=$1 [L,NC]
+
+Rewriterule ^all$ index.php?op=dash&op2=all [L,NC]
+Rewriterule ^all/page/([0-9]+)$ index.php?op=dash&&op2=all&page=$1 [L,NC]
+Rewriterule ^live$ index.php?op=dash&op2=live [L,NC]
+Rewriterule ^live/page/([0-9]+)$ index.php?op=dash&op2=live&page=$1 [L,NC]
+
+
+Rewriterule ^oficina$ index.php?op=dash&op2=ofi [L,NC]
+Rewriterule ^oficina/page/([0-9]+)$ index.php?op=dash&op2=ofi&page=$1 [L,NC]
+
+
+#EVENTOS
+Rewriterule ^evento$ index.php?op=evento [L,NC]
+
+Rewriterule ^evento/ultra$ index.php?op=evento&op2=ultra [L,NC]
+Rewriterule ^evento/smash_wiiu$ index.php?op=evento&op2=smash_wiiu [L,NC]
+Rewriterule ^evento/killer$ index.php?op=evento&op2=killer [L,NC]
+
+Rewriterule ^evento/marvel$ index.php?op=evento&op2=marvel [L,NC]
+Rewriterule ^evento/gg$ index.php?op=evento&op2=gg [L,NC]
+Rewriterule ^evento/mortal$ index.php?op=evento&op2=mortal [L,NC]
+
+Rewriterule ^evento/smash$ index.php?op=evento&op2=smash [L,NC]
+Rewriterule ^evento/p4$ index.php?op=evento&op2=p4 [L,NC]
+Rewriterule ^evento/tekken$ index.php?op=evento&op2=tekken [L,NC]
+
+Rewriterule ^chat/grupo$ index.php?op=chat_g [L,NC]
+
+
+
+
+
+#mensajes
+
+Rewriterule ^chat$ index.php?sub=men&op=lis [L,NC]
+
+#Comentarios
+
+Rewriterule ^comentarios$ index.php?sub=come&op=lis [L,NC]
+Rewriterule ^comentarios/general$ index.php?sub=come&op=lis&op2=gen [L,NC]
+
+
+
+#invitar
+
+Rewriterule ^invitar$ index.php?sub=cue&op=inv [L,NC]
+
+
+#ENVIAR PUBLICCION
+
+Rewriterule ^send$ index.php?sub=img&op=reg4 [L,NC]
+
+#MAS VISTOS
+
+Rewriterule ^mas_vistos$ index.php?op=mas [L,NC]
+
+Rewriterule ^mas_vistos/page/([0-9]+)$ index.php?op=mas&page=$1 [L,NC]
+
+
+#logout
+
+Rewriterule ^logout$ index.php?op=salir [L,NC]
+
+
+
+#tags
+
+Rewriterule ^tags/([a-zA-Z0-9]+)$ index.php?op=dash&tag=$1 [L,NC]
+Rewriterule ^tags/([a-zA-Z0-9]+)/page/([0-9]+)$ index.php?op=dash&tag=$1&page=$2 [L,NC]
+Rewriterule ^tags$ index.php?op=tags_all [L,NC]
+
+
+
+
+
+#publicacion
+
+Rewriterule ^post/([0-9]+)$ index.php?op=ver&id=$1 [L,NC]
+Rewriterule ^post/([0-9]+)/(.*)$ index.php?op=ver&id=$1 [L,NC]
+
+#editar publicacion
+Rewriterule ^edit_post/([0-9]+)$ index.php?op=edit_post&id=$1 [L,NC]
+Rewriterule ^edit_post$ index.php?op=edit_post&id=$1 [L,NC]
+
+Rewriterule ^ramdom_post$ index.php?op=post_random [L,NC]
+
+
+#login
+
+Rewriterule ^login$ index.php?op=login [L,NC]
+
+
+
+#registro
+
+Rewriterule ^registro$ index.php?op=registro [L,NC]
+Rewriterule ^registro/url/post/([0-9]+)$ index.php?op=registro&url=post/$1 [L,NC]
+
+Rewriterule ^registro/url/evento/ultra$ index.php?op=registro&url=evento/ultra [L,NC]
+Rewriterule ^registro/url/evento/smash_wiiu$ index.php?op=registro&url=evento/smash_wiiu [L,NC]
+Rewriterule ^registro/url/evento/killer$ index.php?op=registro&url=evento/killer [L,NC]
+Rewriterule ^registro/url/evento/marvel$ index.php?op=registro&url=evento/marvel [L,NC]
+Rewriterule ^registro/url/evento/gg$ index.php?op=registro&url=evento/gg [L,NC]
+Rewriterule ^registro/url/evento/mortal$ index.php?op=registro&url=evento/mortal [L,NC]
+Rewriterule ^registro/url/evento/smash$ index.php?op=registro&url=evento/smash [L,NC]
+Rewriterule ^registro/url/evento/p4$ index.php?op=registro&url=evento/p4 [L,NC]
+Rewriterule ^registro/url/evento/tekken$ index.php?op=registro&url=evento/tekken [L,NC]  
+
+#categorias 
+
+Rewriterule ^cat/([a-zA-Z0-9]+)$ index.php?op=dash&cat=$1 [L,NC]
+Rewriterule ^cat/([a-zA-Z0-9]+)/page/([0-9]+)$ index.php?op=dash&cat=$1&page=$2 [L,NC]
+
+#LINKS 
+Rewriterule ^links$ index.php?sub=link&op=lis [L,NC]
+
+
+#INbox
+
+Rewriterule ^inbox$ index.php?sub=pre&op=lis [L,NC]
+
+#Registrar 
+
+Rewriterule ^registrar$ index.php?sub=img&op=reg3 [L,NC]
+Rewriterule ^registrar/estado$ index.php?sub=img&op=reg3&op2=e [L,NC]
+Rewriterule ^registrar/imagen$ index.php?sub=img&op=reg3&op2=i [L,NC]
+Rewriterule ^registrar/video$ index.php?sub=img&op=reg3&op2=v [L,NC]
+Rewriterule ^registrar/link$ index.php?sub=img&op=reg3&op2=l [L,NC]
+
+#Categorias
+
+Rewriterule ^categorias$ index.php?op=categorias [L,NC]
+
+#Mejor 
+
+Rewriterule ^dashboard/mejor$ index.php?op=mejor [L,NC]
+
+#EXPLORAR USUARIOS 
+
+Rewriterule ^explorar/peliculas/(.*)$ index.php?op=usuarios&op2=peliculas&op3=$1 [L,NC]
+Rewriterule ^explorar/musica/(.*)$ index.php?op=usuarios&op2=musica&op3=$1 [L,NC]
+Rewriterule ^explorar/juegos/(.*)$ index.php?op=usuarios&op2=videojuegos&op3=$1 [L,NC]
+Rewriterule ^explorar/libros/(.*)$ index.php?op=usuarios&op2=libros&op3=$1 [L,NC]
+Rewriterule ^explorar/otros/(.*)$ index.php?op=usuarios&op2=otros&op3=$1 [L,NC]
+
+
+
+# PANELES DE CONFIGURACION
+Rewriterule ^config/cuenta$ index.php?sub=cue&op=act [L,NC]
+
+
+# SUBCUENTAS
+Rewriterule ^subcuentas$ index.php?sub=cue&op=sub [L,NC]
+Rewriterule ^cambiar_usuario/(.*)$ index.php?sub=cue&op=camb&id=$1 [L,NC]
+
+
+
+<IfModule mod_expires.c>
+  ExpiresActive on
+
+  # Por defecto 1 mes de caché
+  ExpiresDefault                          "access plus 1 month"
+
+  # los manifiestos appcache necesitan solicitarse cada vez, por firefox 3.6 (probablemente no necesario actualmente?
+  ExpiresByType text/cache-manifest       "access plus 0 seconds"
+
+  # El HTML nunca debe de ser cacheado
+  ExpiresByType text/html                 "access plus 0 seconds"
+
+  # Los datos dinámicos tampoco (tal vez podría variar dependiendo de tu aplicación)
+  ExpiresByType text/xml                  "access plus 0 seconds"
+  ExpiresByType application/xml           "access plus 0 seconds"
+  ExpiresByType application/json          "access plus 0 seconds"
+
+  # Una hora para los feeds (cambiar dependiendo de la fecha de actualización de tu web)
+  ExpiresByType application/rss+xml       "access plus 1 hour"
+  ExpiresByType application/atom+xml      "access plus 1 hour"
+
+  # Favicon (Sólo una semana porque el nombre no cambia, luego podría haber cambios y mantenerse el cacheado)
+  ExpiresByType image/x-icon              "access plus 1 week"
+
+  # Imágenes, vídeo, audio: 1 mes
+  ExpiresByType image/gif                 "access plus 1 month"
+  ExpiresByType image/png                 "access plus 1 month"
+  ExpiresByType image/jpeg                "access plus 1 month"
+  ExpiresByType video/ogg                 "access plus 1 month"
+  ExpiresByType audio/ogg                 "access plus 1 month"
+  ExpiresByType video/mp4                 "access plus 1 month"
+  ExpiresByType video/webm                "access plus 1 month"
+
+  # Fuentes web: 1 mes
+  ExpiresByType application/x-font-ttf    "access plus 1 month"
+  ExpiresByType font/opentype             "access plus 1 month"
+  ExpiresByType application/x-font-woff   "access plus 1 month"
+  ExpiresByType image/svg+xml             "access plus 1 month"
+  ExpiresByType application/vnd.ms-fontobject "access plus 1 month"
+
+  # CSS y JavaScript: 1 año. Ten en cuenta que si cambias los ficheros deberías usar una query string o un nombre de archivo diferente para evitar que los visitantes reciban archivos cacheados.
+  ExpiresByType text/css                  "access plus 1 year"
+  ExpiresByType application/javascript    "access plus 1 year"
+
+</IfModule>
+
+# Eliminar E-Tag
+# Estamos enviando periodos de caché muy amplios, así que no es necesario que el navegador compruebe mediante E-Tag si el fichero cambió
+<IfModule mod_headers.c>
+  Header unset ETag
+</IfModule>
+FileETag None
+
+<IfModule mod_deflate.c>
+    # Force compression for mangled headers.
+    # http://developer.yahoo.com/blogs/ydn/posts/2010/12/pushing-beyond-gzipping
+    <IfModule mod_setenvif.c>
+        <IfModule mod_headers.c>
+            SetEnvIfNoCase ^(Accept-EncodXng|X-cept-Encoding|X{15}|~{15}|-{15})$ ^((gzip|deflate)\s*,?\s*)+|[X~-]{4,13}$ HAVE_Accept-Encoding
+            RequestHeader append Accept-Encoding "gzip,deflate" env=HAVE_Accept-Encoding
+        </IfModule>
+    </IfModule>
+
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE application/atom+xml \
+                                      application/javascript \
+                                      application/json \
+                                      application/rss+xml \
+                                      application/vnd.ms-fontobject \
+                                      application/x-font-ttf \
+                                      application/x-web-app-manifest+json \
+                                      application/xhtml+xml \
+                                      application/xml \
+                                      font/opentype \
+                                      image/svg+xml \
+                                      image/x-icon \
+                                      text/css \
+                                      text/html \
+                                      text/plain \
+                                      text/x-component \
+                                      text/xml
+    </IfModule>
+
+</IfModule>
